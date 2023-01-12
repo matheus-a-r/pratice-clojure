@@ -1,12 +1,19 @@
 (ns servico-clojure.servidor
   (:require [io.pedestal.http.route :as route]
             [io.pedestal.http :as http]
-            [io.pedestal.test :as test]))
+            [io.pedestal.test :as test]
+            [servico-clojure.database :as database]))
 
-(def store (atom {}))
+(defn assoc-store [context]
+  (update context :request assoc :store database/store))
+
+;coloca o store dentro da request para o criar-tarefa nao acessar o store diretamente
+(def db-interceptor
+  {:name :db-interceptor
+   :enter assoc-store})
 
 (defn lista-tarefas [request]
-  {:status 200 :body @store})
+  {:status 200 :body @(:store request)})
 
 (defn criar-tarefa-mapa [uuid nome status]
   {:id uuid :nome nome :status status})
@@ -15,7 +22,8 @@
   (let [uuid (java.util.UUID/randomUUID)
         nome (get-in request [:query-params :nome])
         status (get-in request [:query-params :status])
-        tarefa (criar-tarefa-mapa uuid nome status)]
+        tarefa (criar-tarefa-mapa uuid nome status)
+        store (:store request)]
     (swap! store assoc uuid tarefa)
     {:status 200 :body {:mensagem "Tarefa registrada com sucesso!"
                         :tarefa tarefa}}))
@@ -28,8 +36,8 @@
 ;cada vetor eh uma rota
 (def routes (route/expand-routes
               #{["/hello" :get funcao-hello :route-name :hello-world]
-                ["/tarefa" :post criar-tarefa :route-name :criar-tarefa]
-                ["/tarefa" :get lista-tarefas :route-name :lista-tarefas]}))
+                ["/tarefa" :post [db-interceptor criar-tarefa]  :route-name :criar-tarefa]
+                ["/tarefa" :get [db-interceptor lista-tarefas] :route-name :lista-tarefas]}))
 
 
 ;configuracoes do projeto
@@ -47,15 +55,24 @@
 (defn test-request [verb url]
   (test/response-for (::http/service-fn @server) verb url))
 
+(defn stop-server []
+  (http/stop @server))
+
+(defn restart-server []
+  (stop-server)
+  (start-server))
+
 (start-server)
-(println (test-request :get "/hello?name=Matheus"))
-(println (test-request :post "/tarefa?nome=Ler&status=pendente"))
-(println (test-request :post "/tarefa?nome=Correr&status=feito"))
+;(restart-server)
+(println "Server started/restarted")
 
-(println "Listando todas as tarefas:")
-(println (test-request :get "/tarefa"))
 
-(println @store)
+
+(test-request :get "/hello?name=Matheus")
+(test-request :post "/tarefa?nome=Correr&status=pendente")
+(test-request :post "/tarefa?nome=Ler&status=pendente")
+(clojure.edn/read-string (:body (test-request :get "/tarefa")))
+;(println @database/store)
 
 
 
