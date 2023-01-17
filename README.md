@@ -1,6 +1,6 @@
 # servico-clojure
 
-A Clojure library designed to ... well, that part is up to you.
+CRUD básico em clojure que realiza operações em tarefas.
 
 ## Usage
 
