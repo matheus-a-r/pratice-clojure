@@ -6,5 +6,6 @@
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [io.pedestal/pedestal.service "0.5.7"]
                  [io.pedestal/pedestal.route "0.5.7"]
-                 [io.pedestal/pedestal.jetty "0.5.7"]]
+                 [io.pedestal/pedestal.jetty "0.5.7"]
+                 [org.slf4j/slf4j-simple "1.7.28"]]
   :repl-options {:init-ns servico-clojure.core})

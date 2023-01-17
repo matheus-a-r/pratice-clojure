@@ -2,7 +2,8 @@
   (:require [io.pedestal.http.route :as route]
             [io.pedestal.http :as http]
             [io.pedestal.test :as test]
-            [servico-clojure.database :as database]))
+            [servico-clojure.database :as database]
+            [io.pedestal.interceptor :as in]))
 
 (defn assoc-store [context]
   (update context :request assoc :store database/store))
@@ -55,17 +56,21 @@
 ;cada vetor eh uma rota
 (def routes (route/expand-routes
               #{["/hello" :get funcao-hello :route-name :hello-world]
-                ["/tarefa" :post [db-interceptor criar-tarefa]  :route-name :criar-tarefa]
-                ["/tarefa" :get [db-interceptor lista-tarefas] :route-name :listar-tarefas]
-                ["/tarefa/:id" :delete [db-interceptor remover-tarefa] :route-name :remover-tarefa]
-                ["/tarefa/:id" :patch [db-interceptor atualizar-tarefa] :route-name :atualizar-tarefa]}))
+                ["/tarefa" :post criar-tarefa :route-name :criar-tarefa]
+                ["/tarefa" :get listar-tarefas :route-name :listar-tarefas]
+                ["/tarefa/:id" :delete remover-tarefa :route-name :remover-tarefa]
+                ["/tarefa/:id" :patch atualizar-tarefa :route-name :atualizar-tarefa]}))
 
 
 ;configuracoes do projeto
-(def service-map {::http/routes routes
-                  ::http/port   9999
-                  ::http/type   :jetty
-                  ::http/join?  false})
+(def service-map-base {::http/routes routes
+                  ::http/port        9999
+                  ::http/type        :jetty
+                  ::http/join?       false})
+
+(def service-map (-> service-map-base
+                                   (http/default-interceptors)
+                                   (update ::http/interceptors conj (in/interceptor db-interceptor))))
 
 (defonce server (atom nil))
 
@@ -91,12 +96,12 @@
 
 
 (test-request :get "/hello?name=Matheus")
-(test-request :post "/tarefa?nome=Correr&status=pendente")
-(test-request :post "/tarefa?nome=Ler&status=pendente")
-(test-request :post "/tarefa?nome=Estudar&status=feito")
+;(test-request :post "/tarefa?nome=Correr&status=pendente")
+;(test-request :post "/tarefa?nome=Ler&status=pendente")
+;(test-request :post "/tarefa?nome=Estudar&status=feito")
 (clojure.edn/read-string (:body (test-request :get "/tarefa")))
-(test-request :delete "/tarefa/9a4fc7b5-be9f-4373-a6bf-34e4dd9aa4a3")
-(test-request :patch "/tarefa/0731b434-6d82-4ff3-8180-e183d645adfc?nome=Rir&status=pendente")
+;(test-request :delete "/tarefa/9a4fc7b5-be9f-4373-a6bf-34e4dd9aa4a3")
+;(test-request :patch "/tarefa/0731b434-6d82-4ff3-8180-e183d645adfc?nome=Rir&status=pendente")
 
 (println @database/store)
 

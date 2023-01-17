@@ -78,7 +78,8 @@
     <orderEntry type="library" name="Leiningen: org.javassist/javassist:3.18.1-GA" level="project" />
     <orderEntry type="library" name="Leiningen: org.msgpack/msgpack:0.6.12" level="project" />
     <orderEntry type="library" name="Leiningen: org.ow2.asm/asm-all:4.2" level="project" />
-    <orderEntry type="library" name="Leiningen: org.slf4j/slf4j-api:1.7.26" level="project" />
+    <orderEntry type="library" name="Leiningen: org.slf4j/slf4j-api:1.7.28" level="project" />
+    <orderEntry type="library" name="Leiningen: org.slf4j/slf4j-simple:1.7.28" level="project" />
     <orderEntry type="library" name="Leiningen: ring/ring-codec:1.1.1" level="project" />
     <orderEntry type="library" name="Leiningen: ring/ring-core:1.7.1" level="project" />
     <orderEntry type="library" name="Leiningen: tigris:0.1.1" level="project" />
